@@ -43,6 +43,13 @@ class RunningRobot(object):
     def get_status(self):
         pass
 
+    def get_robot_health(self):
+        pass
+
+    def get_robot_status(self):
+        self.get_robot_health()
+        pass
+
     def get_navigation(self):
         pass
 
