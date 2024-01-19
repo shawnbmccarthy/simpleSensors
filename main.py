@@ -12,7 +12,7 @@ from viam.logging import getLogger
 from viam.module.module import Module
 
 from components import SimpleSensor, SimplePowerSensor, SimpleBase, SimpleMotor
-
+from emulators
 logger = getLogger(__name__)
 
 OK = 0

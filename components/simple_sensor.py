@@ -10,7 +10,8 @@ from viam.resource.base import ResourceBase
 from viam.resource.registry import Registry, ResourceCreatorRegistration
 from viam.resource.types import Model, ModelFamily
 from viam.utils import SensorReading
-from .sensor_constants import MAPPING_STATUS, MAPPING_NAVIGATION, MAPPING_DEBUG
+from emulators.simple_robot import MAPPING_STATUS, MAPPING_NAVIGATION, MAPPING_DEBUG
+
 
 class SimpleSensor(Sensor, Reconfigurable):
     MODEL: ClassVar[Model] = Model(ModelFamily('acme', 'robodeck'), 'sensor')
