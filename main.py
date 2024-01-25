@@ -12,7 +12,7 @@ from viam.logging import getLogger
 from viam.module.module import Module
 
 from components import SimpleSensor, SimplePowerSensor, SimpleBase, SimpleMotor
-from emulators
+from emulators import RunningRobot
 logger = getLogger(__name__)
 
 OK = 0
@@ -23,8 +23,9 @@ MODULE_START_ERR = 2
 async def main(addr: str) -> None:
     failed = OK
     logger.info('starting module')
-
+    robot = RunningRobot.get_robot()
     try:
+        robot.start_robot()
         m = Module(addr)
         # technically not needed but here for completeness
         m.add_model_from_registry(Sensor.SUBTYPE, SimpleSensor.MODEL)
@@ -36,6 +37,7 @@ async def main(addr: str) -> None:
         logger.fatal(f'error occurred starting module: {e}, exiting ({MODULE_START_ERR})')
         failed = MODULE_START_ERR
     finally:
+        robot.stop_robot()
         sys.exit(failed)
 
 
