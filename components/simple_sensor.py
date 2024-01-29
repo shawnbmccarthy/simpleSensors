@@ -132,6 +132,7 @@ class SimpleSensor(Sensor, Reconfigurable):
             elif 'MINIMUM_CLIFF_HEIGHT' == key:
                 self.robot.set_minimum_cliff_height(command[key])
             elif 'ROBOT_TASK' == key:
+                self.logger.info(f'Setting robot: {key}, Command: {command[key]}')
                 self.robot.set_robot_task(command[key])
             else:
                 self.logger.warning(f'Unknown command: {key}')

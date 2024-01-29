@@ -319,35 +319,55 @@ class RunningRobot(object):
     def set_robot_task(self, task: int):
         if task in ROBOT_TASK:
             t = ROBOT_TASK[task]
+            self.logger.info(f'robot task: {task}:{t}')
             if t == 'PAUSE':
                 self.logger.info(f'task:{task}:{t}, setting idle')
                 self.robot_task = SIMPLE_ROBOT_TASK['IDLE']
                 self.detailed_robot_task = DETAILED_ROBOT_TASK['ROBOT_IDLE']
                 pass
             elif t == 'STAIN_LEFT':
-                self.updates.append(self.do_stain_left)
+                with self.lock:
+                    self.updates.append(self.do_stain_left)
             elif t == 'STAIN_RIGHT':
-                self.updates.append(self.do_stain_right)
+                with self.lock:
+                    self.updates.append(self.do_stain_right)
             elif t == 'EXPLORE_LEFT':
-                self.updates.append(self.do_explore_left)
+                with self.lock:
+                    self.updates.append(self.do_explore_left)
             elif t == 'EXPLORE_RIGHT':
-                self.updates.append(self.do_explore_right)
+                with self.lock:
+                    self.updates.append(self.do_explore_right)
             elif t == 'CLEAN_AIR':
-                self.updates.append(self.clean_air)
+                with self.lock:
+                    self.updates.append(self.clean_air)
             elif t == 'CLEAN_PUMPS':
-                self.updates.append(self.clean_pumps)
+                with self.lock:
+                    self.updates.append(self.clean_pumps)
             elif t == 'CLEAN_DUAL':
-                self.updates.append(self.clean_dual)
+                with self.lock:
+                    self.updates.append(self.clean_dual)
+            else:
+                self.logger.error(f'Unknown task: {t}')
         else:
             self.logger.warning(f'Unknown task: {task}')
 
+    # TODO: was trying to get slick, and reduce code but this is actually useless
+    # TODO: move to simple updates of all values
+    # TODO: add threads for jitter values
     def do_update(self):
         try:
-            f = self.updates.pop(-1)
-            f()
+            with self.lock:
+                self.logger.info(f'current updates: {self.updates}')
+                f = self.updates.pop(-1)
+                while f is not None:
+                    self.logger.info(f'running {f}')
+                    f()
+                    self.logger.info(f'updates: {self.updates}')
+                    f = self.updates.pop(-1)
         except IndexError as e:
             self.logger.error(f'nothing to update: {e}')
             self.updates.append(self.get_battery_voltage_percentage)
+            time.sleep(3)
 
     def start_robot(self):
         self.updates.append(self.get_battery_voltage_percentage)

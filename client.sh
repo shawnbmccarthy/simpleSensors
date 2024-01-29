@@ -22,7 +22,19 @@ fi
 
 # TODO: Error checking for empty string
 RUST_UTILS_SO=$(find "${SCRIPT_DIR}" -name libviam_rust_utils.so -printf '%h')
-
 export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${RUST_UTILS_SO}
+
+# Source env file
+if [[ -f ./env.sh ]]; then
+  source ./env.sh
+else
+  echo "[ERROR] please setup env.sh that can be sourced for api secret"
+  exit 1
+fi
+
+if [[ -z ${API_KEY} || -z ${API_KEY_ID} || -z ${ROBOT_ADDRESS} ]]; then
+  echo "[ERROR] missing env variable - API_KEY, API_KEY_ID, or ROBOT_ADDRESS"
+  exit 1
+fi
 
 exec "${SCRIPT_DIR}"/venv/bin/python "${SCRIPT_DIR}"/client.py "$@"
