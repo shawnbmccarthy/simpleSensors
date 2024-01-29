@@ -30,6 +30,7 @@ async def main() -> None:
     for rn in robot.resource_names:
         logger.info(f'resource name: {rn}')
 
+    # TODO: create preset sensors ( all C params)
     debug: Sensor = Sensor.from_robot(robot, 'debug')
 
     components: List[Union[PowerSensor, Sensor]] = [
@@ -39,10 +40,14 @@ async def main() -> None:
         PowerSensor.from_robot(robot, 'battery2')
     ]
 
+    # get readings
     for component in components:
         reading = await component.get_readings()
         logger.info(f'reading: {reading}')
 
+    # TODO: change presets
+
+    # set tasks
     for key in ROBOT_TASK.keys():
         result = await debug.do_command(command={'ROBOT_TASK': int(key)})
         logger.info(f'ROBOT_TASK[{ROBOT_TASK[key]}] - result: {result}')

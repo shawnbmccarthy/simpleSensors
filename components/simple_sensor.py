@@ -12,7 +12,19 @@ from viam.resource.base import ResourceBase
 from viam.resource.registry import Registry, ResourceCreatorRegistration
 from viam.resource.types import Model, ModelFamily
 from viam.utils import SensorReading
-from emulators.simple_robot import MAPPING_STATUS, MAPPING_NAVIGATION, MAPPING_DEBUG, RunningRobot
+from emulators.simple_robot import (
+    MAPPING_DEBUG,
+    MAPPING_PRESET,
+    MAPPING_NAVIGATION,
+    MAPPING_STATUS,
+    CliffMode,
+    DeckBoardWidth,
+    GapPosition,
+    GapWidth,
+    RobotTask,
+    RunningRobot,
+    ScanType
+)
 
 
 class SimpleSensor(Sensor, Reconfigurable):
@@ -75,19 +87,41 @@ class SimpleSensor(Sensor, Reconfigurable):
             }
         elif self.mapped_name == MAPPING_STATUS:
             return {
-                'CONSUMED_CAP': self.robot.consumed_capacity,
+                'CONSUMED_CAP': self.robot.consumed_capacity,       # estimation related to time & rate to stain/pumps
+                                                                    # & operations
+                                                                    # for use with battery consumption (turbines consume
+                                                                    # 95% of amp hours) - air pumps & stain pumps
+                                                                    # turbines, drive system, stain pumps
                 'CONSUMED_STAIN': self.robot.consumed_stain,
-                'FWD_STOP_REASON': self.robot.forward_stop_reason,
-                'ROBOT_HEALTH': self.robot.robot_health,
-                'ROBOT_MODE': self.robot.robot_task,
+                'FWD_STOP_REASON': self.robot.forward_stop_reason.value,
+                'ROBOT_HEALTH': self.robot.robot_health.value,
+                'ROBOT_MODE': self.robot.robot_task.value,
                 'SEARCH_STOP_ANGLE': self.robot.search_stop_angle_offset,
-                'SEARCH_STOP_REASON': self.robot.search_stop_reason,
+                'SEARCH_STOP_REASON': self.robot.search_stop_reason.value,
                 'STAINED_AREA': self.robot.stained_area,
                 'ST_TEMP': self.robot.stm_temp,
                 'SUCC_SEARCH_RATIO': self.robot.successful_searches_percentage
             }
         elif self.mapped_name == MAPPING_DEBUG:
-            return self.robot.get_debug()
+            return self.robot.get_debug_data()
+        elif self.mapped_name == MAPPING_PRESET:
+            return {
+                'BOARD_WIDTH': self.robot.board_width.value,
+                'GAP_WIDTH': self.robot.gap_width.value,
+                'GAP_SENSOR_POSITION': self.robot.gap_sensor_position.value,
+                'CLIFF_SENSOR_MODE': self.robot.cliff_mode.value,
+                'DRIVE_SPEED': self.robot.drive_speed,
+                'RIGHT_PUMP_FLOW': self.robot.right_pump_flow,
+                'LEFT_PUMP_FLOW': self.robot.left_pump_flow,
+                'SCAN_TYPE': self.robot.scan_type.value,
+                'PRE_GAP_SEARCH_ANGLE': self.robot.pre_gap_search_angle,
+                'POST_GAP_SEARCH_ANGLE': self.robot.post_gap_search_angle,
+                'BUMPER_REVERSE_DISTANCE': self.robot.bumper_reverse_distance,
+                'CLIFF_REVERSE_DISTANCE': self.robot.cliff_reverse_distance,
+                'STAIN_DELAY_DISTANCE': self.robot.stain_delay_distance,
+                'DYNAMIC_BOARD_WIDTH_MODE': 'ON' if self.robot.dynamic_board_width_mode else 'OFF',
+                'ROBOT_TASK': self.robot.robot_task.value
+            }
         self.logger.warning(f'{self.mapped_name} not supported')
         return {}
 
@@ -100,44 +134,48 @@ class SimpleSensor(Sensor, Reconfigurable):
     ) -> Mapping[str, ValueTypes]:
         ret_data = {}
         for key in command.keys():
-            ret_val = True
-            if 'BOARD_WIDTH' == key:
-                self.robot.set_deck_board_width(command[key])
-            elif 'GAP_WIDTH' == key:
-                self.robot.set_deck_board_width(command[key])
-            elif 'GAP_SENSOR_POSITION' == key:
-                self.robot.set_gap_sensor_position(command[key])
-            elif 'CLIFF_SENSOR_MODE' == key:
-                self.robot.set_cliff_sensor_mode(command[key])
-            elif 'DRIVE_SPEED' == key:
-                self.robot.set_drive_speed(command[key])
-            elif 'RIGHT_PUMP_FLOW' == key:
-                self.robot.set_right_pump_flow(command[key])
-            elif 'LEFT_PUMP_FLOW' == key:
-                self.robot.set_left_pump_flow(command[key])
-            elif 'SCAN_TYPE' == key:
-                self.robot.set_scan_type(command[key])
-            elif 'PRE_GAP_SEARCH_ANGLE' == key:
-                self.robot.set_pre_gap_search_angle(command[key])
-            elif 'POST_GAP_SEARCH_ANGLE' == key:
-                self.robot.set_post_gap_search_angle(command[key])
-            elif 'BUMPER_REVERSE_DISTANCE' == key:
-                self.robot.set_bumper_reverse_distance(command[key])
-            elif 'CLIFF_REVERSE_DISTANCE' == key:
-                self.robot.set_cliff_reverse_distance(command[key])
-            elif 'STAIN_DELAY_DISTANCE' == key:
-                self.robot.set_stain_delay_distance(command[key])
-            elif 'DYNAMIC_BOARD_WIDTH_MODE' == key:
-                self.robot.set_dynamic_board_width_mode(command[key])
-            elif 'MINIMUM_CLIFF_HEIGHT' == key:
-                self.robot.set_minimum_cliff_height(command[key])
-            elif 'ROBOT_TASK' == key:
-                self.logger.info(f'Setting robot: {key}, Command: {command[key]}')
-                self.robot.set_robot_task(command[key])
-            else:
-                self.logger.warning(f'Unknown command: {key}')
-                ret_val = False
-            ret_data[key] = ret_val
+            val = command[key]
+            try:
+                ret_val = True
+                if 'BOARD_WIDTH' == key:
+                    self.robot.board_width = DeckBoardWidth(val)
+                elif 'GAP_WIDTH' == key:
+                    self.robot.gap_width = GapWidth(val)
+                elif 'GAP_SENSOR_POSITION' == key:
+                    self.robot.gap_sensor_position = GapPosition(val)
+                elif 'CLIFF_SENSOR_MODE' == key:
+                    self.robot.cliff_sensor_mode = CliffMode(val)
+                elif 'DRIVE_SPEED' == key:
+                    self.robot.drive_speed = val
+                elif 'RIGHT_PUMP_FLOW' == key:
+                    self.robot.right_pump_flow = val
+                elif 'LEFT_PUMP_FLOW' == key:
+                    self.robot.left_pump_flow = val
+                elif 'SCAN_TYPE' == key:
+                    self.robot.scan_type = ScanType(val)
+                elif 'PRE_GAP_SEARCH_ANGLE' == key:
+                    self.robot.pre_gap_search_angle = val
+                elif 'POST_GAP_SEARCH_ANGLE' == key:
+                    self.robot.post_gap_search_angle = val
+                elif 'BUMPER_REVERSE_DISTANCE' == key:
+                    self.robot.bumper_reverse_distance = val
+                elif 'CLIFF_REVERSE_DISTANCE' == key:
+                    self.robot.cliff_reverse_distance = val
+                elif 'STAIN_DELAY_DISTANCE' == key:
+                    self.robot.stain_delay_distance = val
+                elif 'DYNAMIC_BOARD_WIDTH_MODE' == key:
+                    self.robot.dynamic_board_width_mode = val.lower().strip() == 'true'
+                elif 'MINIMUM_CLIFF_HEIGHT' == key:
+                    self.robot.minimum_cliff_height = key
+                elif 'ROBOT_TASK' == key:
+                    self.robot.robot_task = RobotTask(val)
+                else:
+                    self.logger.warning(f'Unknown command: {key}')
+                    ret_val = False
+                ret_data[key] = ret_val
+            except ValueError as ve:
+                self.logger.error(f'Value error occurred: {ve}')
+                ret_data[key] = str(ve)
         return ret_data
 
 

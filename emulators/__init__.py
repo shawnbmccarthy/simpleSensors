@@ -1,1 +1,1 @@
-from .simple_robot import RunningRobot
+from .simple_robot import *
