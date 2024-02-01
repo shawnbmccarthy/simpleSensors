@@ -6,6 +6,7 @@ from threading import Thread, Lock
 from typing import Any, Callable, Dict, List, Union
 from viam.logging import getLogger
 
+from emulators.utilities import generate_random, jitter
 from .robot_constants import (
     DetailedRobotTask,
     ForwardStopReason,
@@ -13,11 +14,12 @@ from .robot_constants import (
     RobotTask,
     SearchStopReason,
     SimpleRobotTask,
-    generate_random
 )
 
 from .config_params import ConfigParams
 from .debug_params import DebugParams
+
+logger = getLogger('global robot emulator')
 
 
 class RunningRobot(ConfigParams, DebugParams):
@@ -30,7 +32,8 @@ class RunningRobot(ConfigParams, DebugParams):
     @classmethod
     def get_robot(cls):
         if cls._robot is None:
-            return cls()
+            cls._robot = cls()
+            return cls._robot
         else:
             return cls._robot
 
@@ -109,6 +112,13 @@ class RunningRobot(ConfigParams, DebugParams):
 
         return (self.battery_voltage_1 + self.battery_voltage_2) / (24+24)
 
+    def do_jitter(self):
+        """
+
+        Returns:
+        """
+        self.stm_temp = jitter(self.stm_temp, 2.0)
+
     def do_stain_left(self):
         self.detailed_robot_task = DetailedRobotTask.ROBOT_AUTO_STAINING_LEFT
         self.simple_robot_task = SimpleRobotTask.STAINING_LEFT
@@ -138,32 +148,38 @@ class RunningRobot(ConfigParams, DebugParams):
         self.simple_robot_task = SimpleRobotTask.DUAL_CLEANING
 
     def set_robot_task(self, task: RobotTask):
-        self.logger.info(f'robot task: {task}:{task.name}')
         if task == RobotTask.PAUSE:
-            self.logger.info(f'task:{task}:{task.name}, setting idle')
             self.simple_robot_task = SimpleRobotTask.IDLE
             self.detailed_robot_task = DetailedRobotTask.ROBOT_IDLE
+            self.robot_task = task
             pass
         elif task == RobotTask.STAIN_LEFT:
             with self.lock:
+                self.robot_task = task
                 self.updates.append(self.do_stain_left)
         elif task == RobotTask.STAIN_RIGHT:
             with self.lock:
+                self.robot_task = task
                 self.updates.append(self.do_stain_right)
         elif task == RobotTask.EXPLORE_LEFT:
             with self.lock:
+                self.robot_task = task
                 self.updates.append(self.do_explore_left)
         elif task == RobotTask.EXPLORE_RIGHT:
             with self.lock:
+                self.robot_task = task
                 self.updates.append(self.do_explore_right)
         elif task == RobotTask.CLEAN_AIR:
             with self.lock:
+                self.robot_task = task
                 self.updates.append(self.clean_air)
         elif task == RobotTask.CLEAN_PUMPS:
             with self.lock:
+                self.robot_task = task
                 self.updates.append(self.clean_pumps)
         elif task == RobotTask.CLEAN_DUAL:
             with self.lock:
+                self.robot_task = task
                 self.updates.append(self.clean_dual)
         else:
             self.logger.error(f'Unknown task: {task}')
@@ -174,15 +190,12 @@ class RunningRobot(ConfigParams, DebugParams):
     def do_update(self):
         try:
             with self.lock:
-                self.logger.info(f'current updates: {self.updates}')
                 f = self.updates.pop(-1)
                 while f is not None:
-                    self.logger.info(f'running {f}')
                     f()
-                    self.logger.info(f'updates: {self.updates}')
                     f = self.updates.pop(-1)
         except IndexError as e:
-            self.logger.error(f'nothing to update: {e}')
+            self.logger.debug(f'nothing to update: {e}')
             self.updates.append(self.get_battery_voltage_percentage)
             time.sleep(3)
 
@@ -199,6 +212,9 @@ class RunningRobot(ConfigParams, DebugParams):
 
     def run_robot(self):
         while self.is_running:
+            if self.robot_task is not RobotTask.PAUSE:
+                self.logger.info(f'robot task: {self.robot_task}')
+            self.updates.append(self.do_jitter)
             self.do_update()
             time.sleep(1)
         self.thread.join()

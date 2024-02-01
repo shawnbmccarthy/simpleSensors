@@ -12,14 +12,14 @@ class ConfigParams(object):
         self.logger: Logger = getLogger(__name__)
 
         # change ops
-        self.board_width = DeckBoardWidth.W_14cm # C0
-        self.gap_width = GapWidth.REGULAR                   # C1
-        self.gap_sensor_position = GapPosition.RIGHT # C2
-        self.cliff_mode = CliffMode.SEPARATE                 # C3
+        self.board_width = DeckBoardWidth.W_14cm        # C0
+        self.gap_width = GapWidth.REGULAR               # C1
+        self.gap_sensor_position = GapPosition.RIGHT    # C2
+        self.cliff_mode = CliffMode.SEPARATE            # C3
         self.drive_speed = 15.0                         # C4
         self.right_pump_flow = 80.0                     # C5
         self.left_pump_flow = 80.0                      # C6
-        self.scan_type = ScanType.FULL                   # C7
+        self.scan_type = ScanType.FULL                  # C7
         self.pre_gap_search_angle = 15.0                # C9
         self.post_gap_search_angle = 10.0               # C10
         self.bumper_reverse_distance = 15.0             # C11
@@ -27,7 +27,11 @@ class ConfigParams(object):
         self.stain_delay_distance = 18.0                # C13
         self._dynamic_board_width_mode = True           # C14 - bool must initialize the type first
         self.minimum_cliff_height = 7.0                 # C15
-        self.robot_task = RobotTask.PAUSE                 # C17 - current robot task (starts at pause)
+        self.robot_task = RobotTask.PAUSE               # C17 - current robot task (starts at pause)
+
+    def _raise_value_error(self, message: str) -> None:
+        self.logger.warning(message)
+        raise ValueError(message)
 
     @property
     def board_width(self) -> DeckBoardWidth:
@@ -38,7 +42,8 @@ class ConfigParams(object):
         if value in DeckBoardWidth:
             self._board_width = value
         else:
-            self.logger.warning(f'invalid board_width value: {value}')
+
+            self._raise_value_error(f'invalid board_width value: {value}')
 
     @property
     def gap_width(self) -> GapWidth:
@@ -49,7 +54,7 @@ class ConfigParams(object):
         if value in GapWidth:
             self._gap_width = value
         else:
-            self.logger.warning(f'invalid gap_width value: {value}')
+            self._raise_value_error(f'invalid gap_width value: {value}')
 
     @property
     def gap_sensor_position(self) -> GapPosition:
@@ -60,7 +65,7 @@ class ConfigParams(object):
         if value in GapPosition:
             self._gap_sensor_position = value
         else:
-            self.logger.warning(f'invalid gap_sensor_position value: {value}')
+            self._raise_value_error(f'invalid gap_sensor_position value: {value}')
 
     @property
     def cliff_mode(self) -> CliffMode:
@@ -71,7 +76,7 @@ class ConfigParams(object):
         if value in CliffMode:
             self._cliff_mode = value
         else:
-            self.logger.warning(f'invalid cliff_mode value: {value}')
+            self._raise_value_error(f'invalid cliff_mode value: {value}')
 
     @property
     def drive_speed(self) -> float:
@@ -82,7 +87,7 @@ class ConfigParams(object):
         if 8 <= value <= 20:
             self._drive_speed = value
         else:
-            self.logger.warning(f'Invalid drive speed: {value}')
+            self._raise_value_error(f'Invalid drive speed: {value}')
 
     @property
     def right_pump_flow(self) -> float:
@@ -93,7 +98,7 @@ class ConfigParams(object):
         if 1 <= value <= 200:
             self._right_pump_flow = value
         else:
-            self.logger.warning(f'Invalid right pump flow: {value}')
+            self._raise_value_error(f'Invalid right pump flow: {value}')
 
     @property
     def left_pump_flow(self) -> float:
@@ -104,7 +109,7 @@ class ConfigParams(object):
         if 1 <= value <= 200:
             self._left_pump_flow = value
         else:
-            self.logger.warning(f'Invalid left pump flow: {value}')
+            self._raise_value_error(f'Invalid left pump flow: {value}')
 
     @property
     def scan_type(self) -> ScanType:
@@ -115,7 +120,7 @@ class ConfigParams(object):
         if value in ScanType:
             self._scan_type = value
         else:
-            self.logger.warning(f'invalid scan type: {value}')
+            self._raise_value_error(f'invalid scan type: {value}')
 
     @property
     def pre_gap_search_angle(self) -> float:
@@ -126,7 +131,7 @@ class ConfigParams(object):
         if 0 <= value <= 30:
             self._pre_gap_search_angle = value
         else:
-            self.logger.warning(f'invalid pre_gap_search_angle: {value}')
+            self._raise_value_error(f'invalid pre_gap_search_angle: {value}')
 
     @property
     def post_gap_search_angle(self) -> float:
@@ -137,7 +142,7 @@ class ConfigParams(object):
         if 0 <= value <= 15:
             self._post_gap_search_angle = value
         else:
-            self.logger.warning(f'invalid post_gap_search_angle: {value}')
+            self._raise_value_error(f'invalid post_gap_search_angle: {value}')
 
     @property
     def bumper_reverse_distance(self) -> float:
@@ -148,7 +153,7 @@ class ConfigParams(object):
         if 10 <= value <= 30:
             self._bumper_reverse_distance = value
         else:
-            self.logger.warning(f'invalid bumper_reverse_distance: {value}')
+            self._raise_value_error(f'invalid bumper_reverse_distance: {value}')
 
     @property
     def cliff_reverse_distance(self) -> float:
@@ -159,7 +164,7 @@ class ConfigParams(object):
         if 10 <= value <= 30:
             self._cliff_reverse_distance = value
         else:
-            self.logger.warning(f'invalid cliff_reverse_distance: {value}')
+            self._raise_value_error(f'invalid cliff_reverse_distance: {value}')
 
     @property
     def stain_delay_distance(self) -> float:
@@ -170,7 +175,7 @@ class ConfigParams(object):
         if 0 <= value <= 30:
             self._stain_delay_distance = value
         else:
-            self.logger.warning(f'invalid stain_delay_distance: {value}')
+            self._raise_value_error(f'invalid stain_delay_distance: {value}')
 
     @property
     def dynamic_board_width_mode(self) -> bool:
@@ -179,9 +184,9 @@ class ConfigParams(object):
     @dynamic_board_width_mode.setter
     def dynamic_board_width_mode(self, value: bool) -> None:
         if type(value) is bool:
-            self.dynamic_board_width_mode = value
+            self._dynamic_board_width_mode = value
         else:
-            self.logger.warning(f'invalid dynamic board width mode: {value}')
+            self._raise_value_error(f'invalid dynamic board width mode: {value}')
 
     @property
     def minimum_cliff_height(self) -> float:
@@ -192,7 +197,7 @@ class ConfigParams(object):
         if 1 <= value <= 10:
             self._minimum_cliff_height = value
         else:
-            self.logger.warning(f'invalid minimum_cliff_height: {value}')
+            self._raise_value_error(f'invalid minimum_cliff_height: {value}')
 
     @property
     def robot_task(self) -> RobotTask:
@@ -203,4 +208,4 @@ class ConfigParams(object):
         if value in RobotTask:
             self._robot_task = value
         else:
-            self.logger.warning(f'invalid robot_task: {value}')
+            self._raise_value_error(f'invalid robot_task: {value}')

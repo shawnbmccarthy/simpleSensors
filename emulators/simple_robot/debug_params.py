@@ -6,7 +6,7 @@ from logging import Logger
 from typing import Dict
 from viam.logging import getLogger
 
-from .robot_constants import generate_random
+from emulators.utilities import generate_random
 
 
 class DebugParams(object):

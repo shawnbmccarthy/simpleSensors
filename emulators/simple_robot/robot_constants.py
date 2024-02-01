@@ -102,7 +102,3 @@ class RobotTask(Enum):
     CLEAN_AIR = 6
     CLEAN_PUMPS = 7
     CLEAN_DUAL = 8
-
-
-def generate_random(a: float, b: float, r: int = 2) -> float:
-    return round(random.uniform(a, b), r)

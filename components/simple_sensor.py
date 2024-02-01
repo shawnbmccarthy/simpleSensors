@@ -119,7 +119,8 @@ class SimpleSensor(Sensor, Reconfigurable):
                 'BUMPER_REVERSE_DISTANCE': self.robot.bumper_reverse_distance,
                 'CLIFF_REVERSE_DISTANCE': self.robot.cliff_reverse_distance,
                 'STAIN_DELAY_DISTANCE': self.robot.stain_delay_distance,
-                'DYNAMIC_BOARD_WIDTH_MODE': 'ON' if self.robot.dynamic_board_width_mode else 'OFF',
+                'MINIMUM_CLIFF_HEIGHT': self.robot.minimum_cliff_height,
+                'DYNAMIC_BOARD_WIDTH_MODE': self.robot.dynamic_board_width_mode,
                 'ROBOT_TASK': self.robot.robot_task.value
             }
         self.logger.warning(f'{self.mapped_name} not supported')
@@ -132,50 +133,55 @@ class SimpleSensor(Sensor, Reconfigurable):
         timeout: Optional[float] = None,
         **kwargs
     ) -> Mapping[str, ValueTypes]:
+        self.logger.info(f'command: {command}')
         ret_data = {}
         for key in command.keys():
             val = command[key]
             try:
                 ret_val = True
                 if 'BOARD_WIDTH' == key:
-                    self.robot.board_width = DeckBoardWidth(val)
+                    self.robot.board_width = DeckBoardWidth(int(val))
                 elif 'GAP_WIDTH' == key:
-                    self.robot.gap_width = GapWidth(val)
+                    self.robot.gap_width = GapWidth(int(val))
                 elif 'GAP_SENSOR_POSITION' == key:
-                    self.robot.gap_sensor_position = GapPosition(val)
+                    self.robot.gap_sensor_position = GapPosition(int(val))
                 elif 'CLIFF_SENSOR_MODE' == key:
-                    self.robot.cliff_sensor_mode = CliffMode(val)
+                    self.robot.cliff_sensor_mode = CliffMode(int(val))
                 elif 'DRIVE_SPEED' == key:
-                    self.robot.drive_speed = val
+                    self.robot.drive_speed = float(val)
                 elif 'RIGHT_PUMP_FLOW' == key:
-                    self.robot.right_pump_flow = val
+                    self.robot.right_pump_flow = float(val)
                 elif 'LEFT_PUMP_FLOW' == key:
-                    self.robot.left_pump_flow = val
+                    self.robot.left_pump_flow = float(val)
                 elif 'SCAN_TYPE' == key:
-                    self.robot.scan_type = ScanType(val)
+                    self.robot.scan_type = ScanType(int(val))
                 elif 'PRE_GAP_SEARCH_ANGLE' == key:
-                    self.robot.pre_gap_search_angle = val
+                    self.robot.pre_gap_search_angle = float(val)
                 elif 'POST_GAP_SEARCH_ANGLE' == key:
-                    self.robot.post_gap_search_angle = val
+                    self.robot.post_gap_search_angle = float(val)
                 elif 'BUMPER_REVERSE_DISTANCE' == key:
-                    self.robot.bumper_reverse_distance = val
+                    self.robot.bumper_reverse_distance = float(val)
                 elif 'CLIFF_REVERSE_DISTANCE' == key:
-                    self.robot.cliff_reverse_distance = val
+                    self.robot.cliff_reverse_distance = float(val)
                 elif 'STAIN_DELAY_DISTANCE' == key:
-                    self.robot.stain_delay_distance = val
+                    self.robot.stain_delay_distance = float(val)
                 elif 'DYNAMIC_BOARD_WIDTH_MODE' == key:
-                    self.robot.dynamic_board_width_mode = val.lower().strip() == 'true'
+                    self.robot.dynamic_board_width_mode = val
                 elif 'MINIMUM_CLIFF_HEIGHT' == key:
-                    self.robot.minimum_cliff_height = key
+                    self.robot.minimum_cliff_height = float(val)
                 elif 'ROBOT_TASK' == key:
-                    self.robot.robot_task = RobotTask(val)
+                    self.robot.robot_task = RobotTask(int(val))
                 else:
                     self.logger.warning(f'Unknown command: {key}')
                     ret_val = False
+                    ret_data['cmd_status'] = 'FAILURE'
                 ret_data[key] = ret_val
             except ValueError as ve:
                 self.logger.error(f'Value error occurred: {ve}')
                 ret_data[key] = str(ve)
+                ret_data['cmd_status'] = 'FAILURE'
+        if 'cmd_status' not in ret_data:
+            ret_data['cmd_status'] = 'OK'
         return ret_data
 
 
