@@ -42,6 +42,7 @@ class SimpleSensor(Sensor, Reconfigurable):
         sensor.reconfigure(config, dependencies)
         return sensor
 
+    # noinspection DuplicatedCode
     @classmethod
     def validate_config(cls, config: ComponentConfig) -> Sequence[str]:
         mapped_name = config.attributes.fields['mapped_name'].string_value
@@ -86,6 +87,7 @@ class SimpleSensor(Sensor, Reconfigurable):
                 'US_RIGHT': self.robot.right_cliff
             }
         elif self.mapped_name == MAPPING_STATUS:
+            self.logger.info(f'{self.mapped_name} -> {self.robot.robot_task}')
             return {
                 'CONSUMED_CAP': self.robot.consumed_capacity,       # estimation related to time & rate to stain/pumps
                                                                     # & operations
@@ -100,7 +102,7 @@ class SimpleSensor(Sensor, Reconfigurable):
                 'SEARCH_STOP_REASON': self.robot.search_stop_reason.value,
                 'STAINED_AREA': self.robot.stained_area,
                 'ST_TEMP': self.robot.stm_temp,
-                'SUCC_SEARCH_RATIO': self.robot.successful_searches_percentage
+                'SUCCESS_SEARCH_RATIO': self.robot.successful_searches_percentage
             }
         elif self.mapped_name == MAPPING_DEBUG:
             return self.robot.get_debug_data()

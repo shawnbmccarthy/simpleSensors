@@ -1,4 +1,3 @@
-import random
 from enum import Enum
 
 # STM32 Protobuf values
@@ -6,6 +5,12 @@ MAPPING_STATUS: str = '1'
 MAPPING_NAVIGATION: str = '2'
 MAPPING_DEBUG: str = '3'
 MAPPING_PRESET: str = '4'
+
+
+class RobotHealth(Enum):
+    GREEN = 0
+    YELLOW = 1
+    RED = 2
 
 
 class SimpleRobotTask(Enum):
@@ -37,12 +42,6 @@ class DetailedRobotTask(Enum):
     ROBOT_FOLLOW_WALL = 13
     ROBOT_TEST = 14
     ROBOT_EMERGENCY_LOW_LEVEL_STOP = 15
-
-
-class RobotHealth(Enum):
-    GREEN = 0
-    YELLOW = 1
-    RED = 2
 
 
 class ForwardStopReason(Enum):
@@ -99,6 +98,7 @@ class RobotTask(Enum):
     STAIN_RIGHT = 2
     EXPLORE_LEFT = 3
     EXPLORE_RIGHT = 4
+    CLEANING = 5        # added
     CLEAN_AIR = 6
     CLEAN_PUMPS = 7
     CLEAN_DUAL = 8

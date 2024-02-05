@@ -25,6 +25,7 @@ class SimpleBase(Base, Reconfigurable):
         sensor.reconfigure(config, dependencies)
         return sensor
 
+    # noinspection DuplicatedCode
     @classmethod
     def validate_config(cls, config: ComponentConfig) -> Sequence[str]:
         mapped_name = config.attributes.fields['mapped_name'].string_value

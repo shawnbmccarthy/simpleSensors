@@ -19,6 +19,7 @@ class SimplePowerSensor(PowerSensor, Reconfigurable):
     mapped_name: str
     board: str
     lock: Lock
+    sensor_name: str
     robot: Union[RunningRobot, None]
 
     @classmethod
@@ -27,6 +28,7 @@ class SimplePowerSensor(PowerSensor, Reconfigurable):
         sensor.reconfigure(config, dependencies)
         return sensor
 
+    # noinspection DuplicatedCode
     @classmethod
     def validate_config(cls, config: ComponentConfig) -> Sequence[str]:
         mapped_name = config.attributes.fields['mapped_name'].string_value
@@ -50,6 +52,7 @@ class SimplePowerSensor(PowerSensor, Reconfigurable):
     def reconfigure(self, config: ComponentConfig, dependencies: Mapping[ResourceName, ResourceBase]) -> None:
         self.mapped_name = config.attributes.fields['mapped_name'].string_value
         self.board = config.attributes.fields['board'].string_value
+        self.sensor_name = config.name
         self.robot = RunningRobot.get_robot()
 
     async def get_readings(
@@ -59,9 +62,15 @@ class SimplePowerSensor(PowerSensor, Reconfigurable):
         timeout: Optional[float] = None,
         **kwargs
     ) -> Mapping[str, SensorReading]:
+        volts = 0.0
+        if self.sensor_name == 'battery1':
+            volts = self.robot.battery_voltage_1
+        if self.sensor_name == 'battery2':
+            volts = self.robot.battery_voltage_2
+
         return {
             'a': {'amps': 0, 'ampsIsAc': False},
-            'v': {'volts': self.robot.get_battery_voltage_percentage(), 'voltsIsAc': False},
+            'v': {'volts': volts, 'voltsIsAc': False},
             'watts': 0
         }
 
